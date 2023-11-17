@@ -1,0 +1,50 @@
+import torch
+import torchvision
+import torch
+import torch
+import numpy as np
+#冲激函数
+def pulse(x_2, y_2, z=200e-6, wavelength=500e-9):
+    # Convert nm to m for calculations
+    x_2 = x_2 * 1e-9
+    y_2 = y_2 * 1e-9
+    x_1 = torch.arange(0, 500e-9*80, 500e-9)
+    y_1 = torch.arange(0, 500e-9*80, 500e-9)
+
+    # Define constant i
+    i = 1j
+
+    f = torch.zeros((len(x_1), len(y_1)), dtype=torch.cfloat)
+
+    for idx_x, val_x in enumerate(x_1):
+        for idx_y, val_y in enumerate(y_1):
+            r = torch.sqrt(((x_2 - val_x)**2 + (y_2 - val_y)**2 + z**2)*10e+6)*10e-6
+            k = 2 * np.pi / wavelength
+            temp = (1/(2 * np.pi)) * ((i*k*r)/r) * (z/r) * ((1/r) - i * (2 * np.pi / wavelength))
+            f[idx_x,idx_y] = temp
+    return f
+#输入第一层跟第二层的琼斯矩阵，得到等效的相位
+def phase(J11_1,J12_1,J21_1,J22_1,J11_2,J12_2,J21_2,J22_2):
+    J11,J12,J21,J22=torch.zeros((80,80),dtype=torch.cfloat),torch.zeros((80,80),dtype=torch.cfloat),torch.zeros((80,80),dtype=torch.cfloat),torch.zeros((80,80),dtype=torch.cfloat)
+    for i in range(80):
+        for j in range(80):
+            print(i)
+            J11[i, j] = J11_2[i,j]*torch.sum((J11_1*pulse(i,j)*500e-9*500e-9))+J12_2[i,j]*torch.sum(
+                (J21_1*pulse(i,j)*500e-9*500e-9))
+            print(torch.angle(J11[i,j]))
+            J12[i, j] = J11_2[i, j] * torch.sum((J12_1 * pulse(i, j) * 500e-9 * 500e-9)) + J12_2[i, j] * torch.sum(
+                (J22_1 * pulse(i, j) * 500e-9 * 500e-9))
+            J21[i, j] = J21_2[i, j] * torch.sum((J11_1 * pulse(i, j) * 500e-9 * 500e-9)) + J22_2[i, j] * torch.sum(
+                (J22_1 * pulse(i, j) * 500e-9 * 500e-9))
+            J22[i, j] = J21_2[i, j] * torch.sum((J12_1 * pulse(i, j) * 500e-9 * 500e-9)) + J22_2[i, j] * torch.sum(
+                (J22_1 * pulse(i, j) * 500e-9 * 500e-9))
+    return torch.angle(J11),torch.angle(J12),torch.angle(J21),torch.angle(J22)
+J11_1 = torch.randn(80, 80)+1j*torch.randn(80, 80)
+J12_1 = torch.randn(80, 80)+1j*torch.randn(80, 80)
+J21_1 = torch.randn(80, 80)+1j*torch.randn(80, 80)
+J22_1 = torch.randn(80, 80)+1j*torch.randn(80, 80)
+J11_2 = torch.randn(80, 80)+1j*torch.randn(80, 80)
+J12_2 = torch.randn(80, 80)+1j*torch.randn(80, 80)
+J21_2 = torch.randn(80, 80)+1j*torch.randn(80, 80)
+J22_2 = torch.randn(80, 80)+1j*torch.randn(80, 80)
+phaseXX,phaseXY,phaseYX,phaseYY=phase(J11_1,J12_1,J21_1,J22_1,J11_2,J12_2,J21_2,J22_2)
