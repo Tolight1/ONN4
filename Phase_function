@@ -28,10 +28,8 @@ def phase(J11_1,J12_1,J21_1,J22_1,J11_2,J12_2,J21_2,J22_2):
     J11,J12,J21,J22=torch.zeros((80,80),dtype=torch.cfloat),torch.zeros((80,80),dtype=torch.cfloat),torch.zeros((80,80),dtype=torch.cfloat),torch.zeros((80,80),dtype=torch.cfloat)
     for i in range(80):
         for j in range(80):
-            print(i)
             J11[i, j] = J11_2[i,j]*torch.sum((J11_1*pulse(i,j)*500e-9*500e-9))+J12_2[i,j]*torch.sum(
                 (J21_1*pulse(i,j)*500e-9*500e-9))
-            print(torch.angle(J11[i,j]))
             J12[i, j] = J11_2[i, j] * torch.sum((J12_1 * pulse(i, j) * 500e-9 * 500e-9)) + J12_2[i, j] * torch.sum(
                 (J22_1 * pulse(i, j) * 500e-9 * 500e-9))
             J21[i, j] = J21_2[i, j] * torch.sum((J11_1 * pulse(i, j) * 500e-9 * 500e-9)) + J22_2[i, j] * torch.sum(
